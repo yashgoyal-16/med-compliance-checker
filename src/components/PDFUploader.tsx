@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Upload, X, CheckCircle } from 'lucide-react';
+import * as pdfjsLib from 'pdfjs-dist';
 
 interface PDFUploaderProps {
   onFileProcessed: (text: string, fileName: string) => void;
@@ -18,32 +19,39 @@ export const PDFUploader = ({ onFileProcessed, isProcessing = false }: PDFUpload
 
   const extractTextFromPDF = async (file: File): Promise<string> => {
     try {
-      // Create a simple text extraction for demo - in production you'd use proper PDF parsing
-      const text = `Medical Report Analysis
+      // Set worker path for pdfjs
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js`;
       
-Patient Information:
-- Report for: ${file.name}
-- Date: ${new Date().toLocaleDateString()}
-- File size: ${(file.size / 1024).toFixed(1)}KB
-
-Medical Content:
-This is a sample medical report text extraction. In a production environment, 
-this would contain the actual extracted text from the PDF document including 
-patient details, diagnosis, treatment recommendations, and clinical findings.
-
-Clinical Notes:
-- Blood pressure readings within normal range
-- Laboratory results pending review
-- Follow-up appointment recommended in 2 weeks
-- Patient advised on medication compliance
-
-Recommendations:
-- Continue current medication regimen
-- Schedule follow-up consultation
-- Monitor symptoms and report any changes`;
-
-      return text;
+      // Convert file to array buffer
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Load the PDF document
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+      
+      // Extract text from each page
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        
+        // Combine text items with spaces
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        
+        fullText += pageText + '\n\n';
+      }
+      
+      if (!fullText.trim()) {
+        throw new Error('No text content found in PDF');
+      }
+      
+      return fullText.trim();
     } catch (error) {
+      console.error('PDF extraction error:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to extract text from PDF: ${error.message}`);
+      }
       throw new Error('Failed to extract text from PDF');
     }
   };
