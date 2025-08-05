@@ -33,34 +33,9 @@ export const sendToWebhook = async (file: File, fileName: string): Promise<Webho
 
     const data = await response.json();
     
-    // Parse the backend response format
-    let results = [];
-    if (data.output) {
-      try {
-        // Extract JSON from the output string (remove markdown formatting)
-        const jsonString = data.output.replace(/```json\n|\n```/g, '');
-        const parsedData = JSON.parse(jsonString);
-        
-        // Convert backend format to frontend format
-        if (parsedData.audit_results) {
-          results = parsedData.audit_results.map((item: any, index: number) => ({
-            id: (index + 1).toString(),
-            type: item.status === 'Non-compliant' ? 'error' : 
-                  item.status === 'Compliant' ? 'success' : 'warning',
-            category: item.rule.split('.')[0] + '.' || 'General',
-            message: item.rule,
-            details: `Status: ${item.status}`,
-            recommendation: item.evidence
-          }));
-        }
-      } catch (parseError) {
-        console.error('Failed to parse backend response:', parseError);
-      }
-    }
-    
     return {
       success: true,
-      results: results,
+      results: data,
       message: 'Analysis completed successfully'
     };
   } catch (error) {
