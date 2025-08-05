@@ -9,7 +9,7 @@ export interface WebhookPayload {
 
 export interface WebhookResponse {
   success: boolean;
-  results?: any[];
+  results?: string;
   error?: string;
   message?: string;
 }
@@ -35,7 +35,7 @@ export const sendToWebhook = async (file: File, fileName: string): Promise<Webho
     
     return {
       success: true,
-      results: data,
+      results: data.output || 'No output received from webhook',
       message: 'Analysis completed successfully'
     };
   } catch (error) {

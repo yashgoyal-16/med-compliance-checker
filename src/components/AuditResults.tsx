@@ -14,7 +14,7 @@ interface AuditResult {
 }
 
 interface AuditResultsProps {
-  results: any;
+  results: string;
   fileName: string;
   onDownloadReport?: () => void;
 }
@@ -47,9 +47,11 @@ export const AuditResults = ({ results, fileName, onDownloadReport }: AuditResul
       <Card className="p-6">
         <h4 className="text-lg font-semibold mb-4 text-card-foreground">Raw Response Data</h4>
         <ScrollArea className="h-[400px] pr-4">
-          <pre className="bg-muted p-4 rounded-lg text-sm text-muted-foreground whitespace-pre-wrap overflow-x-auto">
-            {JSON.stringify(results, null, 2)}
-          </pre>
+          <div className="bg-muted p-4 rounded-lg">
+            <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono">
+              {results}
+            </pre>
+          </div>
         </ScrollArea>
       </Card>
     </div>
