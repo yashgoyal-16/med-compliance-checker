@@ -31,11 +31,11 @@ export const sendToWebhook = async (file: File, fileName: string): Promise<Webho
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.text();
     
     return {
       success: true,
-      results: data.output || 'No output received from webhook',
+      results: data || 'No output received from webhook',
       message: 'Analysis completed successfully'
     };
   } catch (error) {
