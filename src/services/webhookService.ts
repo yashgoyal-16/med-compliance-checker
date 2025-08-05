@@ -28,7 +28,7 @@ export const sendToWebhook = async (file: File, fileName: string): Promise<Webho
     formData.append('source', 'Antishtraf AI - Medical Report Audit');
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for medical report processing
 
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
@@ -60,7 +60,7 @@ export const sendToWebhook = async (file: File, fileName: string): Promise<Webho
       if (error.name === 'AbortError') {
         return {
           success: false,
-          error: 'Request timeout - please try again'
+          error: 'Processing timeout (5 minutes exceeded) - please try again with a smaller file or contact support'
         };
       }
       
