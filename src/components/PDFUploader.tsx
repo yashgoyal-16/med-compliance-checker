@@ -1,65 +1,23 @@
-import { useCallback, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Card } from '@/components/ui/card';
+import { Upload, FileText, CheckCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
-import { FileText, Upload, X, CheckCircle } from 'lucide-react';
-import * as pdfjsLib from 'pdfjs-dist';
+import { toast } from '@/hooks/use-toast';
 
 interface PDFUploaderProps {
-  onFileProcessed: (text: string, fileName: string) => void;
+  onFileProcessed: (file: File, fileName: string) => void;
   isProcessing?: boolean;
 }
 
-export const PDFUploader = ({ onFileProcessed, isProcessing = false }: PDFUploaderProps) => {
-  const { toast } = useToast();
+const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [progress, setProgress] = useState(0);
-
-  const extractTextFromPDF = async (file: File): Promise<string> => {
-    try {
-      // Set worker path for pdfjs
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js`;
-      
-      // Convert file to array buffer
-      const arrayBuffer = await file.arrayBuffer();
-      
-      // Load the PDF document
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let fullText = '';
-      
-      // Extract text from each page
-      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const textContent = await page.getTextContent();
-        
-        // Combine text items with spaces
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(' ');
-        
-        fullText += pageText + '\n\n';
-      }
-      
-      if (!fullText.trim()) {
-        throw new Error('No text content found in PDF');
-      }
-      
-      return fullText.trim();
-    } catch (error) {
-      console.error('PDF extraction error:', error);
-      if (error instanceof Error) {
-        throw new Error(`Failed to extract text from PDF: ${error.message}`);
-      }
-      throw new Error('Failed to extract text from PDF');
-    }
-  };
+  const [isComplete, setIsComplete] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+    
     const file = acceptedFiles[0];
-    if (!file) return;
-
+    
     if (file.type !== 'application/pdf') {
       toast({
         title: "Invalid file type",
@@ -70,32 +28,15 @@ export const PDFUploader = ({ onFileProcessed, isProcessing = false }: PDFUpload
     }
 
     setUploadedFile(file);
-    setProgress(0);
-
-    try {
-      // Simulate progress
-      for (let i = 0; i <= 100; i += 10) {
-        setProgress(i);
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-
-      const extractedText = await extractTextFromPDF(file);
-      onFileProcessed(extractedText, file.name);
-      
-      toast({
-        title: "PDF processed successfully",
-        description: `Extracted text from ${file.name}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Processing failed",
-        description: "Failed to extract text from PDF",
-        variant: "destructive",
-      });
-      setUploadedFile(null);
-      setProgress(0);
-    }
-  }, [onFileProcessed, toast]);
+    setIsComplete(true);
+    
+    onFileProcessed(file, file.name);
+    
+    toast({
+      title: "PDF uploaded successfully",
+      description: `Ready to process ${file.name}`,
+    });
+  }, [onFileProcessed]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -103,95 +44,80 @@ export const PDFUploader = ({ onFileProcessed, isProcessing = false }: PDFUpload
       'application/pdf': ['.pdf']
     },
     multiple: false,
-    disabled: isProcessing
+    disabled: isProcessing || uploadedFile !== null
   });
 
   const removeFile = () => {
     setUploadedFile(null);
-    setProgress(0);
+    setIsComplete(false);
   };
 
   if (uploadedFile) {
     return (
-      <Card className="p-6 bg-gradient-to-br from-card to-accent border border-primary/20">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-success/20 rounded-lg">
-              <FileText className="h-5 w-5 text-success" />
-            </div>
-            <div>
-              <p className="font-medium text-card-foreground">{uploadedFile.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {(uploadedFile.size / 1024).toFixed(1)} KB
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {progress === 100 && (
-              <CheckCircle className="h-5 w-5 text-success" />
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={removeFile}
-              disabled={isProcessing}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+      <div className="p-4 bg-card border border-border rounded-lg">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
+            {uploadedFile.name}
+          </span>
+          <span className="text-xs text-muted-foreground ml-2">
+            {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+          </span>
         </div>
         
-        {progress < 100 && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Processing PDF...</span>
-              <span>{progress}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
+        {isComplete && (
+          <div className="flex items-center justify-center text-sm text-green-600">
+            <CheckCircle className="mr-2 h-4 w-4" />
+            PDF ready for analysis
           </div>
         )}
         
-        {progress === 100 && !isProcessing && (
-          <div className="flex items-center gap-2 text-sm text-success">
-            <CheckCircle className="h-4 w-4" />
-            <span>Ready for audit analysis</span>
-          </div>
-        )}
-      </Card>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={removeFile}
+          className="mt-2 w-full"
+          disabled={isProcessing}
+        >
+          <X className="mr-2 h-4 w-4" />
+          Remove file
+        </Button>
+      </div>
     );
   }
 
   return (
-    <Card 
-      {...getRootProps()} 
-      className={`p-8 border-2 border-dashed transition-all duration-300 cursor-pointer
+    <div
+      {...getRootProps()}
+      className={`
+        border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
         ${isDragActive 
-          ? 'border-primary bg-primary/5 shadow-[var(--shadow-medical)]' 
+          ? 'border-primary bg-primary/5' 
           : 'border-border hover:border-primary/50 hover:bg-accent/50'
         }
         ${isProcessing ? 'cursor-not-allowed opacity-50' : ''}
       `}
     >
       <input {...getInputProps()} />
-      <div className="text-center">
-        <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+      <div className="flex flex-col items-center">
+        <div className="mb-4 p-3 bg-primary/10 rounded-full">
           <Upload className="h-8 w-8 text-primary" />
         </div>
-        <h3 className="text-lg font-semibold mb-2 text-card-foreground">
-          Upload Medical Report
+        <h3 className="text-lg font-semibold mb-2">
+          {isDragActive ? 'Drop PDF here...' : 'Upload PDF Document'}
         </h3>
         <p className="text-muted-foreground mb-4">
           {isDragActive 
-            ? 'Drop your PDF file here...'
-            : 'Drag & drop a PDF file here, or click to select'
+            ? 'Release to upload your PDF file'
+            : 'Drag & drop a PDF file here, or click to browse'
           }
         </p>
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Supported format: PDF</p>
-          <p>• Maximum file size: 10MB</p>
-          <p>• Files are processed securely</p>
+        <div className="text-xs text-muted-foreground">
+          <p>• Accepted format: PDF</p>
+          <p>• Maximum size: 10MB</p>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
+
+export default PDFUploader;
