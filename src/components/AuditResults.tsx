@@ -43,14 +43,16 @@ export const AuditResults = ({ results, fileName, onDownloadReport }: AuditResul
         </div>
       </Card>
 
-      {/* Raw Response */}
+      {/* Analysis Output */}
       <Card className="p-6">
-        <h4 className="text-lg font-semibold mb-4 text-card-foreground">Raw Response Data</h4>
+        <h4 className="text-lg font-semibold mb-4 text-card-foreground">Analysis Results</h4>
         <ScrollArea className="h-[400px] pr-4">
-          <div className="bg-muted p-4 rounded-lg">
-            <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono">
-              {results}
-            </pre>
+          <div className="bg-gradient-to-br from-background to-muted/50 p-6 rounded-lg border border-border/50">
+            <div className="prose prose-sm max-w-none">
+              <div className="text-card-foreground leading-relaxed whitespace-pre-wrap">
+                {results}
+              </div>
+            </div>
           </div>
         </ScrollArea>
       </Card>
