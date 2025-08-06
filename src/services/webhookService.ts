@@ -1,5 +1,4 @@
-// Use environment variable or fallback to hardcoded URL for now
-const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL || 'https://simplifygenai.app.n8n.cloud/webhook/88b0276b-4320-4d1d-956f-1c374cc484b4';
+const WEBHOOK_URL = 'https://simplifygenai.app.n8n.cloud/webhook/88b0276b-4320-4d1d-956f-1c374cc484b4';
 
 export interface WebhookPayload {
   file: File;
