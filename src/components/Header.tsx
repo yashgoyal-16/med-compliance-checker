@@ -3,7 +3,7 @@ import { Shield, Activity } from 'lucide-react';
 
 export const Header = () => {
   return (
-    <Card className="p-6 bg-gradient-to-r from-primary to-primary-dark text-primary-foreground border-0 shadow-[var(--shadow-medical)]">
+    <Card className="p-6 bg-gradient-to-r from-primary to-primary text-primary-foreground border-0">
       <div className="flex items-center gap-4">
         <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
           <Shield className="h-8 w-8" />
