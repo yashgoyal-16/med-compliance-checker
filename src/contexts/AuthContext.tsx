@@ -14,8 +14,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Hardcoded credentials
-const VALID_EMAIL = 'osadigitalkz@gmail.com';
-const VALID_PASSWORD = 'olzhas@123';
+const VALID_CREDENTIALS = [
+  { email: 'osadigitalkz@gmail.com', password: 'olzhas@123' },
+  { email: 'user_123@gmail.com', password: 'abc1234' }
+];
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -38,7 +40,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    if (email === VALID_EMAIL && password === VALID_PASSWORD) {
+    const validCredential = VALID_CREDENTIALS.find(
+      cred => cred.email === email && cred.password === password
+    );
+    
+    if (validCredential) {
       const user = { email };
       setUser(user);
       localStorage.setItem('auth-user', JSON.stringify(user));

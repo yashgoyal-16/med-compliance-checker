@@ -133,13 +133,6 @@ export const LoginForm: React.FC = () => {
           </form>
         </Form>
 
-        <div className="text-center pt-4 border-t border-border">
-          <p className="text-sm text-muted-foreground">Demo Credentials:</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Email: osadigitalkz@gmail.com<br />
-            Password: olzhas@123
-          </p>
-        </div>
       </Card>
     </div>
   );
